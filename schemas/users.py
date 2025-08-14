@@ -1,28 +1,38 @@
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+from enum import Enum
 
-class UserBase(BaseModel):
-    first_name: str = Field(alias='firstName')
-    last_name: str = Field(alias='lastName')
-    email: EmailStr
-    language: Optional[str] = None
-    global_role: Optional[str] = Field(None, alias='globalRole')
 
-class UserCreate(UserBase):
-    password: str
+class UserRole(str, Enum):
+    ADMIN = "global:admin"
+    MEMBER = "global:member"
 
-class UserUpdate(BaseModel):
-    first_name: Optional[str] = Field(None, alias='firstName')
-    last_name: Optional[str] = Field(None, alias='lastName')
-    email: Optional[EmailStr] = None
-    language: Optional[str] = None
-    password: Optional[str] = None
-    global_role: Optional[str] = Field(None, alias='globalRole')
 
-class User(UserBase):
+class User(BaseModel):
     id: str
-    created_at: datetime = Field(alias='createdAt')
-    updated_at: datetime = Field(alias='updatedAt')
+    email: EmailStr
+    first_name: Optional[str] = Field(None, alias="firstName")
+    last_name: Optional[str] = Field(None, alias="lastName")
+    is_pending: Optional[bool] = Field(None, alias="isPending")
+    created_at: datetime = Field(..., alias="createdAt")
+    updated_at: datetime = Field(..., alias="updatedAt")
+    role: Optional[str] = None
 
     model_config = ConfigDict(populate_by_name=True, from_attributes=True)
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    role: Optional[UserRole] = None
+
+
+class UserCreateMultipleResponse(BaseModel):
+    user: Optional[dict] = None
+    error: Optional[str] = None
+
+
+class UserUpdateRole(BaseModel):
+    new_role_name: UserRole = Field(..., alias="newRoleName")
+
+    model_config = ConfigDict(populate_by_name=True)
